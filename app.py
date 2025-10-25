@@ -1,35 +1,39 @@
 import streamlit as st
 import pandas as pd
 
-st.title("Village Khasra Search Chatbot")
+# Load your updated CSV file
+df = pd.read_csv("MP 2031 table_new.csv")
 
-# Load the CSV file
-@st.cache_data
-def load_data():
-    df = pd.read_csv("MP_2031_table_new.csv")
-    return df
+# Clean column names and values to remove hidden spaces
+df.columns = df.columns.str.strip()
+df["Village"] = df["Village"].astype(str).str.strip()
+df["Khasra"] = df["Khasra"].astype(str).str.strip()
 
-df = load_data()
+# Streamlit UI
+st.set_page_config(page_title="Village Khasra Search Chatbot", layout="centered")
 
-# Dropdown for villages (Column C)
-villages = sorted(df.iloc[:, 2].dropna().unique())  # Column C
-selected_village = st.selectbox("Select a Village", villages)
+st.markdown("<h1 style='text-align: center;'>Village Khasra Search Chatbot</h1>", unsafe_allow_html=True)
 
-# Filter for selected village
-village_data = df[df.iloc[:, 2] == selected_village]
+# Dropdown for village selection
+village = st.selectbox("Select a Village", sorted(df["Village"].unique()))
 
-# Text input for Khasra number (Column H)
-khasra_input = st.text_input("Enter Khasra Number")
+# Input for khasra number
+khasra = st.text_input("Enter Khasra Number")
 
-# Search and display
-if khasra_input:
-    result = village_data[village_data.iloc[:, 7].astype(str) == khasra_input]
+# Search logic
+if khasra:
+    khasra = khasra.strip()
+    result = df[(df["Village"] == village) & (df["Khasra"] == khasra)]
+
     if not result.empty:
-        st.write("### Search Result")
-        st.dataframe(result[[result.columns[2], result.columns[5], result.columns[6], result.columns[8], result.columns[9]]])
+        st.success("✅ Khasra details found:")
+        st.table(result[["Village", "Khasra", "Land use", "Sub class", "Latitude", "Longitude"]])
     else:
-        st.warning("No matching Khasra found in this village.")
+        st.warning("⚠️ No matching Khasra found in this village.")
+else:
+    st.info("Enter a Khasra number to begin the search.")
 
-# Expandable full dataset
-with st.expander("View full dataset"):
+# Optional: expandable section to view full dataset
+with st.expander("📘 View full dataset"):
     st.dataframe(df)
+
