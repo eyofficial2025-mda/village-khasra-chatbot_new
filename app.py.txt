@@ -1,0 +1,36 @@
+import streamlit as st
+import pandas as pd
+
+# Title
+st.title("Village Khasra Search Chatbot")
+
+# Load data
+@st.cache_data
+def load_data():
+    df = pd.read_csv("MP_2031_table_new.csv")
+    return df
+
+df = load_data()
+
+# Dropdown for villages
+villages = sorted(df['Village'].dropna().unique())
+selected_village = st.selectbox("Select a Village", villages)
+
+# Filter data by selected village
+village_data = df[df['Village'] == selected_village]
+
+# Text input for Khasra number
+khasra_input = st.text_input("Enter Khasra Number")
+
+# Search
+if khasra_input:
+    result = village_data[village_data['Khasra No'] == khasra_input]
+    if not result.empty:
+        st.write("### Search Result")
+        st.dataframe(result)
+    else:
+        st.warning("No matching Khasra found in this village.")
+
+# Show sample data
+with st.expander("View full dataset"):
+    st.dataframe(df)
